@@ -9,27 +9,22 @@
   const since = document.querySelector("[data-since]");
   if (since) since.textContent = `${new Date().getFullYear() - Number(since.dataset.since)}+`;
 
-  // Header shadow once the page is scrolled
-  const header = document.querySelector(".site-header");
-  const onScroll = () => header.classList.toggle("scrolled", window.scrollY > 8);
-  onScroll();
-  window.addEventListener("scroll", onScroll, { passive: true });
-
-  // Mobile menu
-  const toggle = document.querySelector(".nav-toggle");
-  const nav = document.getElementById("menu");
+  // Mobile menu (full-screen overlay)
+  const toggle = document.querySelector(".globalnav-toggle");
+  const menu = document.getElementById("menu");
   const setMenu = (open) => {
-    nav.classList.toggle("open", open);
+    menu.classList.toggle("open", open);
+    document.body.classList.toggle("menu-open", open);
     toggle.setAttribute("aria-expanded", String(open));
     toggle.setAttribute("aria-label", open ? "Fechar menu" : "Abrir menu");
   };
-  toggle.addEventListener("click", () => setMenu(!nav.classList.contains("open")));
-  nav.querySelectorAll("a").forEach((a) => a.addEventListener("click", () => setMenu(false)));
+  toggle.addEventListener("click", () => setMenu(!menu.classList.contains("open")));
+  menu.querySelectorAll("a").forEach((a) => a.addEventListener("click", () => setMenu(false)));
+  document.addEventListener("keydown", (e) => e.key === "Escape" && setMenu(false));
 
-  // Highlight the nav link for the section currently in view
-  const links = [...nav.querySelectorAll('a[href^="#"]:not(.btn)')];
-  const sections = links.map((a) => document.querySelector(a.getAttribute("href"))).filter(Boolean);
   if ("IntersectionObserver" in window) {
+    // Highlight the nav link for the section currently in view
+    const links = [...menu.querySelectorAll('a[href^="#"]')];
     const spy = new IntersectionObserver(
       (entries) => entries.forEach((e) => {
         if (!e.isIntersecting) return;
@@ -37,7 +32,7 @@
       }),
       { rootMargin: "-45% 0px -50% 0px" }
     );
-    sections.forEach((s) => spy.observe(s));
+    links.map((a) => document.querySelector(a.getAttribute("href"))).filter(Boolean).forEach((s) => spy.observe(s));
 
     // Fade-in on scroll
     const revealer = new IntersectionObserver(
@@ -47,12 +42,14 @@
           revealer.unobserve(e.target);
         }
       }),
-      { threshold: 0.12 }
+      { threshold: 0.15 }
     );
-    document.querySelectorAll(".section-head, .split > *, .brand-card, .contact-card").forEach((el) => {
-      el.classList.add("reveal");
-      revealer.observe(el);
-    });
+    document
+      .querySelectorAll(".tile:not(.tile-hero) .tile-copy, .stats, .body-copy, .grid-head, .grid-tile, .form, .contact-row, .map")
+      .forEach((el) => {
+        el.classList.add("reveal");
+        revealer.observe(el);
+      });
   }
 
   // Quote form: GitHub Pages has no backend, so we compose the request
